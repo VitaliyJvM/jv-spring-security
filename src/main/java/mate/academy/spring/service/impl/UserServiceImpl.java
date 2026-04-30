@@ -5,24 +5,25 @@ import mate.academy.spring.dao.UserDao;
 import mate.academy.spring.exception.DataProcessingException;
 import mate.academy.spring.model.User;
 import mate.academy.spring.service.UserService;
-import mate.academy.spring.util.PasswordUtil;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
-    private static final int SALT_LENGTH = 10;
+    private final ApplicationContext context;
     private final UserDao userDao;
 
-    public UserServiceImpl(UserDao userDao) {
+    public UserServiceImpl(UserDao userDao, ApplicationContext context) {
         this.userDao = userDao;
+        this.context = context;
     }
 
     @Override
     public User add(User user) {
-        String salt = PasswordUtil.getSalt(SALT_LENGTH);
-        String securePassword = PasswordUtil.generateSecurePassword(user.getPassword(), salt);
+        PasswordEncoder passwordEncoder = (PasswordEncoder) context.getBean("getEncoder");
+        String securePassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(securePassword);
-        user.setSalt(salt);
         return userDao.add(user);
     }
 
